@@ -14,6 +14,8 @@ add_executable(SampleEngine "main.cpp")
 configure_file(shaders/frag.spv frag.spv COPYONLY)
 configure_file(shaders/vert.spv vert.spv COPYONLY)
 file(COPY textures DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY models DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+
 
 target_include_directories(SampleEngine PRIVATE include)
 target_link_libraries(SampleEngine PRIVATE
