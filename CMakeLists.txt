@@ -23,3 +23,15 @@ Vulkan::Vulkan
 ${GLFW3_LIBRARY}
 glm::glm
 )
+
+add_executable(tests ./test/test.cpp)
+find_package(Catch2 3 REQUIRED)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain
+Vulkan::Vulkan
+${GLFW3_LIBRARY}
+glm::glm
+)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)
