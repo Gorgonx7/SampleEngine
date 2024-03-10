@@ -1,20 +1,13 @@
-//
-//  fs.hpp
-//  SampleEngine
-//
-//  Created by James Gordon on 24/02/2024.
-//
-
 #pragma once
 #include <vector>
-#include <iostream>
 #include <fstream>
-class fs
+
+class GoldenFileHelper
 {
 public:
-    /// @brief
-    /// @param filename
-    /// @return
+    static bool input_matches_file()
+    {
+    }
     static std::vector<char> readFile(const std::string &filename)
     {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
