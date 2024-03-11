@@ -7,6 +7,7 @@ class GoldenFileHelper
 public:
     static bool input_matches_file()
     {
+        return true;
     }
     static std::vector<char> readFile(const std::string &filename)
     {

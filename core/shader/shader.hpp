@@ -3,15 +3,29 @@
 #include <iostream>
 #include <vulkan/vulkan.hpp>
 #include "../system/fs/fs.hpp"
+enum shader_type
+{
+    VERTEX_SHADER,
+    FRAGMENT_SHADER
+};
+
+// TODO destroy the shader module in the deconstructor
 class Shader
 {
 public:
-    Shader(VkDevice device, std::string input)
+    Shader(VkDevice device, shader_type type, std::string input)
     {
         auto vert_shader = fs::readFile(input);
         std::string s(vert_shader.begin(), vert_shader.end());
-        std::cout << s << std::endl;
-        std::vector<uint32_t> vertShaderCode = Shader::buildShader(s, false);
+        std::vector<uint32_t> vertShaderCode;
+        if (type == shader_type::VERTEX_SHADER)
+        {
+            vertShaderCode = Shader::buildShader(s, shaderc_vertex_shader, false);
+        }
+        else
+        {
+            vertShaderCode = Shader::buildShader(s, shaderc_fragment_shader, false);
+        }
         createShaderModule(device, vertShaderCode);
     }
     VkShaderModule get_shader_module()
@@ -34,7 +48,7 @@ private:
             throw std::runtime_error("failed to create shader module!");
         }
     }
-    std::vector<uint32_t> buildShader(std::string input, bool optimize)
+    std::vector<uint32_t> buildShader(std::string input, shaderc_shader_kind kind, bool optimize)
     {
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
@@ -42,7 +56,7 @@ private:
         {
             options.SetOptimizationLevel(shaderc_optimization_level_size);
         }
-        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(input, shaderc_glsl_default_vertex_shader, "shader.vert", options);
+        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(input, kind, "shader.vert", options);
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
             std::cerr << result.GetErrorMessage() << std::endl;
