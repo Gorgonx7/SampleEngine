@@ -679,9 +679,6 @@ private:
         {
             throw std::runtime_error("failed to create graphics pipeline!");
         }
-
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
     void createFramebuffers()

@@ -15,6 +15,7 @@ class Shader
 public:
     Shader(VkDevice device, shader_type type, std::string input)
     {
+        vk_device = device;
         auto vert_shader = fs::readFile(input);
         std::string s(vert_shader.begin(), vert_shader.end());
         std::vector<uint32_t> vertShaderCode;
@@ -32,9 +33,14 @@ public:
     {
         return module;
     }
+    ~Shader()
+    {
+        vkDestroyShaderModule(vk_device, module, nullptr);
+    }
 
 private:
     VkShaderModule module;
+    VkDevice vk_device;
     void createShaderModule(VkDevice device, std::vector<uint32_t> code)
     {
         VkShaderModuleCreateInfo createInfo{};
