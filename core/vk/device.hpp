@@ -24,6 +24,9 @@ public:
     {
         return msaaSamples;
     }
+    ~physical_device()
+    {
+    }
 
 private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
