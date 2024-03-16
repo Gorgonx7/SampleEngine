@@ -1,16 +1,39 @@
 #include <vulkan/vulkan.hpp>
 #include "QueueFamilyIndicies.hpp"
 #include <set>
-
-class device
+#include <vulkan/vulkan_beta.h>
+struct SwapChainSupportDetails
 {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+};
+class physical_device
+{
+public:
+    physical_device(VkInstance instance, VkSurfaceKHR surface)
+    {
+        pickPhysicalDevice(instance, surface);
+        msaaSamples = getMaxUsableSampleCount();
+    }
+    VkPhysicalDevice get_device()
+    {
+        return physicalDevice;
+    }
+    VkSampleCountFlagBits get_msaa_samples()
+    {
+        return msaaSamples;
+    }
+
+private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
     // TODO centralise this consider merging the logical device and the physical device into one class
     const std::vector<const char *> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME};
-    void pickPhysicalDevice(VkInstance instance)
+
+    void pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
     {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -25,7 +48,7 @@ class device
 
         for (const auto &device : devices)
         {
-            if (isDeviceSuitable(device))
+            if (isDeviceSuitable(device, surface))
             {
                 physicalDevice = device;
                 msaaSamples = getMaxUsableSampleCount();
@@ -38,16 +61,16 @@ class device
             throw std::runtime_error("failed to find a suitable GPU!");
         }
     }
-    bool isDeviceSuitable(VkPhysicalDevice device)
+    bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
     {
-        QueueFamilyIndices indices = findQueueFamilies(device);
+        QueueFamilyIndices indices = findQueueFamilies(device, surface);
 
         bool extensionsSupported = checkDeviceExtensionSupport(device);
 
         bool swapChainAdequate = false;
         if (extensionsSupported)
         {
-            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
+            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device, surface);
             swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
         }
 
@@ -106,5 +129,32 @@ class device
         }
 
         return requiredExtensions.empty();
+    }
+
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+    {
+        SwapChainSupportDetails details;
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+
+        if (formatCount != 0)
+        {
+            details.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+        }
+
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+
+        if (presentModeCount != 0)
+        {
+            details.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+        }
+
+        return details;
     }
 };

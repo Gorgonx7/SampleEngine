@@ -3,5 +3,5 @@
 VkDevice get_fake_device()
 {
 
-    return null;
+    return nullptr;
 }
