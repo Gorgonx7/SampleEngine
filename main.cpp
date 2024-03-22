@@ -27,11 +27,11 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 #include <unordered_map>
-#include "core/vk/device.hpp"
-#include "core/vk/instance.hpp"
 #include "core/shader/shader.hpp"
 #include "core/system/fs/fs.hpp"
 #include "core/vk/QueueFamilyIndicies.hpp"
+#include "core/vk/models/vertex.hpp"
+#include "core/vk/state.hpp"
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -43,63 +43,6 @@ const std::vector<const char *> deviceExtensions = {
     VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME};
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-struct Vertex
-{
-    glm::vec3 pos;
-    glm::vec3 color;
-    glm::vec2 texCoord;
-
-    static VkVertexInputBindingDescription getBindingDescription()
-    {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        return bindingDescription;
-    }
-
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions()
-    {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-        attributeDescriptions[2].binding = 0;
-        attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-        return attributeDescriptions;
-    }
-    bool operator==(const Vertex &other) const
-    {
-        return pos == other.pos && color == other.color && texCoord == other.texCoord;
-    }
-};
-
-namespace std
-{
-    template <>
-    struct hash<Vertex>
-    {
-        size_t operator()(Vertex const &vertex) const
-        {
-            return ((hash<glm::vec3>()(vertex.pos) ^
-                     (hash<glm::vec3>()(vertex.color) << 1)) >>
-                    1) ^
-                   (hash<glm::vec2>()(vertex.texCoord) << 1);
-        }
-    };
-}
 struct UniformBufferObject
 {
     glm::mat4 model;
@@ -120,8 +63,6 @@ public:
 
 private:
     GLFWwindow *window;
-
-    VkSurfaceKHR surface;
 
     VkDevice device;
 
@@ -178,8 +119,7 @@ private:
     VkImage colorImage;
     VkDeviceMemory colorImageMemory;
     VkImageView colorImageView;
-    physical_device *physdev;
-    instance *inst;
+    vk_state *state;
     void initWindow()
     {
         glfwInit();
@@ -199,26 +139,25 @@ private:
 
     void initVulkan()
     {
-        inst = new instance();
-        createSurface(inst->get_instance());
-        physdev = new physical_device(inst->get_instance(), surface);
-        createLogicalDevice(physdev->get_device(), surface);
-        createSwapChain(physdev->get_device(), surface);
+        state = create_state(window);
+        createLogicalDevice(state, state->physdev->get_device(), state->surf->get_surface());
+        createSwapChain(state->physdev->get_device(), state->surf->get_surface());
         createImageViews();
-        createRenderPass(physdev->get_device(), physdev->get_msaa_samples());
+        createRenderPass(state->physdev->get_device(), state->physdev->get_msaa_samples());
+
         createDescriptorSetLayout();
-        createGraphicsPipeline(physdev->get_msaa_samples());
-        createCommandPool(physdev->get_device(), surface);
-        createColorResources(physdev->get_device(), physdev->get_msaa_samples());
-        createDepthResources(physdev->get_device(), physdev->get_msaa_samples());
+        createGraphicsPipeline(state->physdev->get_msaa_samples());
+        createCommandPool(state->physdev->get_device(), state->surf->get_surface());
+        createColorResources(state->physdev->get_device(), state->physdev->get_msaa_samples());
+        createDepthResources(state->physdev->get_device(), state->physdev->get_msaa_samples());
         createFramebuffers();
-        createTextureImage(physdev->get_device());
+        createTextureImage(state->physdev->get_device());
         createTextureImageView();
-        createTextureSampler(physdev->get_device());
+        createTextureSampler(state->physdev->get_device());
         loadModel();
-        createVertexBuffer(physdev->get_device());
-        createIndexBuffer(physdev->get_device());
-        createUniformBuffers(physdev->get_device());
+        createVertexBuffer(state->physdev->get_device());
+        createIndexBuffer(state->physdev->get_device());
+        createUniformBuffers(state->physdev->get_device());
         createDescriptorPool();
         createDescriptorSets();
         createCommandBuffers();
@@ -300,8 +239,7 @@ private:
 
         vkDestroyDevice(device, nullptr);
 
-        vkDestroySurfaceKHR(inst->get_instance(), surface, nullptr);
-        delete inst;
+        delete state;
         glfwDestroyWindow(window);
 
         glfwTerminate();
@@ -321,22 +259,14 @@ private:
 
         cleanupSwapChain();
 
-        createSwapChain(physdev->get_device(), surface);
+        createSwapChain(state->physdev->get_device(), state->surf->get_surface());
         createImageViews();
-        createColorResources(physdev->get_device(), physdev->get_msaa_samples());
-        createDepthResources(physdev->get_device(), physdev->get_msaa_samples());
+        createColorResources(state->physdev->get_device(), state->physdev->get_msaa_samples());
+        createDepthResources(state->physdev->get_device(), state->physdev->get_msaa_samples());
         createFramebuffers();
     }
 
-    void createSurface(VkInstance vk_instance)
-    {
-        if (glfwCreateWindowSurface(vk_instance, window, nullptr, &surface) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create window surface!");
-        }
-    }
-
-    void createLogicalDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+    void createLogicalDevice(vk_state *VkState, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     {
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
@@ -369,10 +299,10 @@ private:
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-        if (inst->are_validation_layers_enabled())
+        if (VkState->inst->are_validation_layers_enabled())
         {
-            createInfo.enabledLayerCount = inst->get_validation_layers_size();
-            createInfo.ppEnabledLayerNames = inst->get_validation_layers();
+            createInfo.enabledLayerCount = VkState->inst->get_validation_layers_size();
+            createInfo.ppEnabledLayerNames = VkState->inst->get_validation_layers();
         }
         else
         {
@@ -388,9 +318,9 @@ private:
         vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
     }
 
-    void createSwapChain(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+    void createSwapChain(VkPhysicalDevice physicalDevice, VkSurfaceKHR vk_surface)
     {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, vk_surface);
 
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
         VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -404,7 +334,7 @@ private:
 
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = surface;
+        createInfo.surface = vk_surface;
 
         createInfo.minImageCount = imageCount;
         createInfo.imageFormat = surfaceFormat.format;
@@ -413,7 +343,7 @@ private:
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice, vk_surface);
         uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
         if (indices.graphicsFamily != indices.presentFamily)
@@ -532,13 +462,14 @@ private:
 
     void createDescriptorSetLayout()
     {
+        // this is for the UBO (used for the MVP matrix)
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorCount = 1;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBinding.pImmutableSamplers = nullptr;
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
+        // this is for the texture
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
         samplerLayoutBinding.descriptorCount = 1;
@@ -1556,28 +1487,28 @@ private:
         }
     }
 
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device)
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR vk_surface)
     {
         SwapChainSupportDetails details;
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vk_surface, &details.capabilities);
 
         uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, vk_surface, &formatCount, nullptr);
 
         if (formatCount != 0)
         {
             details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, vk_surface, &formatCount, details.formats.data());
         }
 
         uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, vk_surface, &presentModeCount, nullptr);
 
         if (presentModeCount != 0)
         {
             details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, vk_surface, &presentModeCount, details.presentModes.data());
         }
 
         return details;
