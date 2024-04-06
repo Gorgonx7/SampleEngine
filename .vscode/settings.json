@@ -61,6 +61,33 @@
         "deque": "cpp",
         "queue": "cpp",
         "span": "cpp",
-        "stack": "cpp"
-    }
+        "stack": "cpp",
+        "execution": "cpp"
+    },
+    "cSpell.words": [
+        "Blit",
+        "blitting",
+        "framebuffer",
+        "glfw",
+        "GLFW",
+        "mipmap",
+        "mipmaps",
+        "msaa",
+        "Multisample",
+        "multisampling",
+        "NONLINEAR",
+        "SFLOAT",
+        "stbi",
+        "Subpass",
+        "Subpasses",
+        "subresource",
+        "Swapchain",
+        "Swapchains",
+        "texcoord",
+        "texcoords",
+        "tinyobj",
+        "TINYOBJLOADER",
+        "unnormalized",
+        "Wwindow"
+    ]
 }

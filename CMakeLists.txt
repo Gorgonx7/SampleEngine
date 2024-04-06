@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
-find_package(glfw3 REQUIRED)
+find_package(GLFW3 REQUIRED)
 find_package(glm REQUIRED)
 
 add_executable(SampleEngine "main.cpp")
