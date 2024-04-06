@@ -20,13 +20,17 @@ public:
         this->image = image;
         image_format = format;
         this->mipLevels = mipLevels;
+        destroyable_image = false;
         createImageView(device, image_format, flags, this->mipLevels);
     }
     ~Image()
     {
         vkDestroyImageView(device, view, nullptr);
-        vkDestroyImage(device, image, nullptr);
-        vkFreeMemory(device, imageMemory, nullptr);
+        if (destroyable_image)
+        {
+            vkDestroyImage(device, image, nullptr);
+            vkFreeMemory(device, imageMemory, nullptr);
+        }
     }
     VkImage *get_image()
     {
@@ -208,6 +212,7 @@ private:
     VkImageView view;
     uint32_t mipLevels;
     VkDeviceMemory imageMemory;
+    bool destroyable_image = true;
 
     void create_image(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceMemory &imageMemory)
     {

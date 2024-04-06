@@ -62,7 +62,6 @@ public:
 private:
     GLFWwindow *window;
 
-    VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
@@ -119,10 +118,9 @@ private:
     void initVulkan()
     {
         state = create_state(window);
-        createRenderPass(state->vk_physical_device->get_device(), state->vk_physical_device->get_msaa_samples(), state->vk_logical_device->get_device(), state->vk_swapchain->get_format(), state->vk_swapchain->get_depth_format());
-        state->vk_swapchain->createFramebuffers(state->vk_logical_device->get_device(), renderPass);
+        state->vk_swapchain->createFramebuffers(state->vk_render_pass->get_render_pass());
         createDescriptorSetLayout(state->vk_logical_device->get_device());
-        createGraphicsPipeline(state->vk_logical_device->get_device(), state->vk_physical_device->get_msaa_samples());
+        createGraphicsPipeline(state->vk_logical_device->get_device(), state->vk_physical_device->get_msaa_samples(), state->vk_render_pass->get_render_pass());
         createTextureImage(state, state->vk_physical_device->get_device(), state->vk_logical_device->get_device());
         createTextureSampler(state->vk_physical_device->get_device(), state->vk_logical_device->get_device());
         loadModel();
@@ -140,7 +138,7 @@ private:
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
-            drawFrame(state, state->vk_logical_device->get_device());
+            drawFrame(state);
         }
 
         vkDeviceWaitIdle(state->vk_logical_device->get_device());
@@ -151,8 +149,6 @@ private:
 
         vkDestroyPipeline(state->vk_logical_device->get_device(), graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(state->vk_logical_device->get_device(), pipelineLayout, nullptr);
-        vkDestroyRenderPass(state->vk_logical_device->get_device(), renderPass, nullptr);
-
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             vkDestroyBuffer(state->vk_logical_device->get_device(), uniformBuffers[i], nullptr);
@@ -184,81 +180,6 @@ private:
         glfwTerminate();
     }
 
-    void createRenderPass(VkPhysicalDevice physicalDevice, VkSampleCountFlagBits msaaSamples, VkDevice device, VkFormat swapChainImageFormat, VkFormat depthFormat)
-    {
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = swapChainImageFormat;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.samples = msaaSamples;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = depthFormat;
-        depthAttachment.samples = msaaSamples;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-        VkAttachmentDescription colorAttachmentResolve{};
-        colorAttachmentResolve.format = swapChainImageFormat;
-        colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference colorAttachmentResolveRef{};
-        colorAttachmentResolveRef.attachment = 2;
-        colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        subpass.pResolveAttachments = &colorAttachmentResolveRef;
-
-        std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
-
-        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create render pass!");
-        }
-    }
-
     void createDescriptorSetLayout(VkDevice device)
     {
         // this is for the UBO (used for the MVP matrix)
@@ -288,7 +209,7 @@ private:
         }
     }
 
-    void createGraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples)
+    void createGraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass)
     {
         Shader vertex_shader = Shader(device, shader_type::VERTEX_SHADER, "shader.vert");
         Shader fragment_shader = Shader(device, shader_type::FRAGMENT_SHADER, "shader.frag");
@@ -703,7 +624,7 @@ private:
         }
     }
 
-    void recordCommandBuffer(swapchain *vk_swapchain, VkCommandBuffer commandBuffer, uint32_t imageIndex)
+    void recordCommandBuffer(swapchain *vk_swapchain, VkCommandBuffer commandBuffer, uint32_t imageIndex, VkRenderPass renderPass)
     {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -803,8 +724,9 @@ private:
         memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
 
-    void drawFrame(vk_state *state, VkDevice device)
+    void drawFrame(vk_state *state)
     {
+        VkDevice device = state->vk_logical_device->get_device();
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
@@ -812,7 +734,7 @@ private:
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            state->vk_swapchain->recreateSwapChain(window, state->vk_physical_device->get_device(), state->vk_surface->get_surface(), state->vk_physical_device->get_msaa_samples(), renderPass);
+            state->vk_swapchain->recreateSwapChain(window, state->vk_physical_device->get_device(), state->vk_surface->get_surface(), state->vk_physical_device->get_msaa_samples(), state->vk_render_pass->get_render_pass());
             return;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
@@ -825,7 +747,7 @@ private:
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
-        recordCommandBuffer(state->vk_swapchain, commandBuffers[currentFrame], imageIndex);
+        recordCommandBuffer(state->vk_swapchain, commandBuffers[currentFrame], imageIndex, state->vk_render_pass->get_render_pass());
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -865,7 +787,7 @@ private:
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
         {
             framebufferResized = false;
-            state->vk_swapchain->recreateSwapChain(window, state->vk_physical_device->get_device(), state->vk_surface->get_surface(), state->vk_physical_device->get_msaa_samples(), renderPass);
+            state->vk_swapchain->recreateSwapChain(window, state->vk_physical_device->get_device(), state->vk_surface->get_surface(), state->vk_physical_device->get_msaa_samples(), state->vk_render_pass->get_render_pass());
         }
         else if (result != VK_SUCCESS)
         {

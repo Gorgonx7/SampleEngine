@@ -62,7 +62,8 @@
         "queue": "cpp",
         "span": "cpp",
         "stack": "cpp",
-        "execution": "cpp"
+        "execution": "cpp",
+        "memory_resource": "cpp"
     },
     "cSpell.words": [
         "Blit",

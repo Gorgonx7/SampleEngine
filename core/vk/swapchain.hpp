@@ -32,8 +32,8 @@ public:
         images = new SwapchainImages();
         vk_device = device;
         createSwapChain(window, physical_device, surface);
-        createColorResources(vk_device, physical_device, msaaSamples);
-        createDepthResources(vk_device, physical_device, msaaSamples);
+        createColorResources(physical_device, msaaSamples);
+        createDepthResources(physical_device, msaaSamples);
     }
     VkSwapchainKHR get_swapchain()
     {
@@ -59,7 +59,7 @@ public:
     {
         return swapChainFramebuffers[index];
     }
-    void createFramebuffers(VkDevice device, VkRenderPass renderPass)
+    void createFramebuffers(VkRenderPass renderPass)
     {
         swapChainFramebuffers.resize(images->swapChainImages.size());
 
@@ -79,7 +79,7 @@ public:
             framebufferInfo.height = swapChainExtent.height;
             framebufferInfo.layers = 1;
             VkFramebuffer *buffer = &swapChainFramebuffers[i];
-            if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, buffer) != VK_SUCCESS)
+            if (vkCreateFramebuffer(vk_device, &framebufferInfo, nullptr, buffer) != VK_SUCCESS)
             {
                 throw std::runtime_error("failed to create framebuffer!");
             }
@@ -100,9 +100,9 @@ public:
         cleanupSwapChain();
 
         createSwapChain(window, physical_device, surface);
-        createColorResources(vk_device, physical_device, msaaSamples);
-        createDepthResources(vk_device, physical_device, msaaSamples);
-        createFramebuffers(vk_device, renderPass);
+        createColorResources(physical_device, msaaSamples);
+        createDepthResources(physical_device, msaaSamples);
+        createFramebuffers(renderPass);
     }
 
 private:
@@ -234,15 +234,15 @@ private:
 
         vkDestroySwapchainKHR(vk_device, vk_swapchain, nullptr);
     }
-    void createColorResources(VkDevice device, VkPhysicalDevice physicalDevice, VkSampleCountFlagBits msaaSamples)
+    void createColorResources(VkPhysicalDevice physicalDevice, VkSampleCountFlagBits msaaSamples)
     {
         VkFormat colorFormat = swapChainImageFormat;
-        images->colourImage = new Image(device, physicalDevice, swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, swapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
+        images->colourImage = new Image(vk_device, physicalDevice, swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, swapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
     }
-    void createDepthResources(VkDevice device, VkPhysicalDevice physicalDevice, VkSampleCountFlagBits msaaSamples)
+    void createDepthResources(VkPhysicalDevice physicalDevice, VkSampleCountFlagBits msaaSamples)
     {
         depthFormat = findDepthFormat(physicalDevice);
-        images->depthImage = new Image(device, physicalDevice, swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+        images->depthImage = new Image(vk_device, physicalDevice, swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
     VkFormat findDepthFormat(VkPhysicalDevice physicalDevice)
     {
