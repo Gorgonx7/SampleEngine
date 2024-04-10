@@ -46,6 +46,6 @@ vk_state *create_state(GLFWwindow *window)
     state->vk_swapchain = new swapchain(window, state->vk_physical_device->get_device(), state->vk_logical_device->get_device(), state->vk_surface->get_surface(), state->vk_physical_device->get_msaa_samples());
     state->commandPool = new CommandPool(state->vk_physical_device->get_device(), state->vk_surface->get_surface(), state->vk_logical_device->get_device());
     state->vk_render_pass = new RenderPass(state->vk_physical_device->get_device(), state->vk_physical_device->get_msaa_samples(), state->vk_logical_device->get_device(), state->vk_swapchain->get_format(), state->vk_swapchain->get_depth_format());
-
+    state->vk_swapchain->createFramebuffers(state->vk_render_pass->get_render_pass());
     return state;
 }

@@ -118,7 +118,6 @@ private:
     void initVulkan()
     {
         state = create_state(window);
-        state->vk_swapchain->createFramebuffers(state->vk_render_pass->get_render_pass());
         createDescriptorSetLayout(state->vk_logical_device->get_device());
         createGraphicsPipeline(state->vk_logical_device->get_device(), state->vk_physical_device->get_msaa_samples(), state->vk_render_pass->get_render_pass());
         createTextureImage(state, state->vk_physical_device->get_device(), state->vk_logical_device->get_device());
