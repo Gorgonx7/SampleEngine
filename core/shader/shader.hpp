@@ -41,6 +41,7 @@ public:
 private:
     VkShaderModule module;
     VkDevice vk_device;
+    
     void createShaderModule(VkDevice device, std::vector<uint32_t> code)
     {
         VkShaderModuleCreateInfo createInfo{};

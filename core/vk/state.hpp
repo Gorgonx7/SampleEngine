@@ -5,6 +5,7 @@
 #include "logical_device.hpp"
 #include "swapchain.hpp"
 #include "renderpass.hpp"
+#include "graphics_pipeline.hpp"
 #include <GLFW/glfw3.h>
 // The state object stores the vulkan state for the entire application
 struct vk_state
@@ -21,8 +22,10 @@ struct vk_state
     VkImageView colorImageView;
     CommandPool *commandPool;
     RenderPass *vk_render_pass;
+    GraphicsPipeline *vk_graphics_pipeline;
     ~vk_state()
     {
+        delete vk_graphics_pipeline;
         delete vk_swapchain;
         delete vk_render_pass;
         delete commandPool;
@@ -34,6 +37,10 @@ struct vk_state
 
 public:
     vk_state() {}
+    void create_graphics_pipeline(DescriptorSet *descriptor_set)
+    {
+        vk_graphics_pipeline = new GraphicsPipeline(vk_logical_device->get_device(), vk_physical_device->get_msaa_samples(), vk_render_pass->get_render_pass(), descriptor_set);
+    }
 };
 
 vk_state *create_state(GLFWwindow *window)

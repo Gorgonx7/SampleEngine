@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
-#include "raw_memory.hpp"
+#include "buffer.hpp"
 #include "command.hpp"
 
 class Image
