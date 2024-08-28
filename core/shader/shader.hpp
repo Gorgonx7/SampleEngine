@@ -57,6 +57,7 @@ private:
     }
     std::vector<uint32_t> buildShader(std::string input, shaderc_shader_kind kind, bool optimize)
     {
+        
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
         if (optimize)
