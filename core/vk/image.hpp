@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
 #include "buffer.hpp"
 #include "command.hpp"
-#include <stdint.h>
+
 class Image
 {
 public:

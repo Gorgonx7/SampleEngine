@@ -4,6 +4,7 @@ project( SampleEngine
 VERSION 1.0
 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 add_subdirectory(glfw)
@@ -22,8 +23,9 @@ if(APPLE)
 endif()
 find_package(Vulkan REQUIRED
   COMPONENTS ${components})
-
-add_executable(SampleEngine "main.cpp")
+find_library(Vulkan_shaderc_LIBRARY NAMES shaderc PATHS ${VULKAN_SDK}/Lib)
+find_library(Vulkan_shaderc_shared_LIBRARY NAMES shaderc_shared PATHS ${VULKAN_SDK}/Lib)
+add_executable(${PROJECT_NAME} "main.cpp")
 
 
 
@@ -33,15 +35,20 @@ configure_file(shaders/shader.frag shader.frag COPYONLY)
 configure_file(shaders/shader.vert shader.vert COPYONLY)
 file(COPY textures DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY models DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-target_include_directories(SampleEngine PRIVATE include)
-target_link_libraries(SampleEngine PRIVATE
-Vulkan::Vulkan
+target_include_directories(${PROJECT_NAME} PRIVATE include )
+target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE
+${Vulkan_LIBRARIES}
 glfw
 glm::glm
 Vulkan::shaderc_combined
 glfw
 )
 
+target_link_libraries(${PROJECT_NAME} INTERFACE 
+${Vulkan_shaderc_LIBRARY}
+${Vulkan_shaderc_shared_LIBRARY}
+)
 
 add_executable(tests test/test.cpp)
 add_library(test_sources OBJECT test/core/shader/shader.cpp)
