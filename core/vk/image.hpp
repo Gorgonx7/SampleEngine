@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include "buffer.hpp"
 #include "command.hpp"
 
@@ -14,7 +14,7 @@ public:
         create_image(device, physicalDevice, width, height, mipLevels, numSamples, format, tiling, usage, properties, imageMemory);
         createImageView(device, format, flags, mipLevels);
     }
-    Image(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags flags, u_int32_t mipLevels)
+    Image(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags flags, uint32_t mipLevels)
     {
         this->device = device;
         this->image = image;
