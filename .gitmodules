@@ -1,5 +1,5 @@
 [submodule "glfw"]
-	path = glfw
+	path = core/libs/glfw
 	url = git@github.com:glfw/glfw.git
 [submodule "glm"]
 	path = glm
