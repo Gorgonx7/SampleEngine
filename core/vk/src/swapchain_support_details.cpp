@@ -1,13 +1,6 @@
-#pragma once
+#include "swapchain_support_details.hpp"
 #include <vector>
 #include <vulkan/vulkan.hpp>
-
-struct SwapChainSupportDetails
-{
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-};
 
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 {

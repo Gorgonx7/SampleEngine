@@ -21,16 +21,31 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 #include <unordered_map>
-#include "core/vk/state.hpp"
+#include <state.hpp>
+#include <vertex.hpp>
+#include <fstream>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const std::string MODEL_PATH = "models/viking_room.obj";
-const std::string TEXTURE_PATH = "textures/viking_room.png";
+const std::string MODEL_PATH = "viking_room.obj";
+const std::string TEXTURE_PATH = "viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
-
+bool exists_test0(const std::string &name)
+{
+    std::ifstream f(name.c_str());
+    if (f.good())
+    {
+        std::cout << "file: " << name << " exists!" << std::endl;
+    }
+    else
+    {
+        std::cout << "file: " << name << " does not exist" << std::endl;
+    }
+    std::cout << strerror(errno) << std::endl;
+    return f.good();
+}
 class HelloTriangleApplication
 {
 public:
@@ -144,6 +159,7 @@ private:
 
     void createTextureImage(vk_state *VkState, VkPhysicalDevice physicalDevice, VkDevice device)
     {
+        exists_test0(TEXTURE_PATH.c_str());
         int texWidth, texHeight, texChannels;
         stbi_uc *pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
@@ -210,6 +226,7 @@ private:
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
+        exists_test0(MODEL_PATH.c_str());
 
         if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str()))
         {
@@ -462,8 +479,9 @@ private:
     }
 };
 
-int main()
+int main(int argc, char *argv[])
 {
+    std::cout << argv[0] << std::endl;
     HelloTriangleApplication app;
 
     try

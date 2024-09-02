@@ -1,6 +1,6 @@
-#pragma once
+#include "buffer.hpp"
 #include <vulkan/vulkan.hpp>
-#include "command.hpp"
+
 void copyBuffer(CommandPool *commandPool, VkQueue graphicsQueue, VkDevice device, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
     VkCommandBuffer commandBuffer = commandPool->beginSingleTimeCommands(device);
@@ -27,6 +27,7 @@ uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, Vk
 
     throw std::runtime_error("failed to find suitable memory type!");
 }
+
 void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
 {
     VkBufferCreateInfo bufferInfo{};

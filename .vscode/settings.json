@@ -91,5 +91,6 @@
         "TINYOBJLOADER",
         "unnormalized",
         "Wwindow"
-    ]
+    ],
+    "C_Cpp.errorSquiggles": "enabled"
 }
