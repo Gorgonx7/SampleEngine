@@ -56,6 +56,11 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
     - name: Install Vulkan SDK
       uses: humbletim/install-vulkan-sdk@v1.1.1
+    - name: Install ubuntu deps
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        sudo apt install libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
