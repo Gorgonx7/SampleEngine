@@ -15,8 +15,8 @@ add_executable(${PROJECT_NAME} "main.cpp")
 
 
 
-configure_file(shaders/frag.spv Debug/frag.spv COPYONLY)
-configure_file(shaders/vert.spv Debug/vert.spv COPYONLY)
+configure_file(shaders/shader.vert Debug/shader.vert COPYONLY)
+configure_file(shaders/shader.frag Debug/shader.frag COPYONLY)
 configure_file(textures/texture.jpg Debug/texture.jpg COPYONLY)
 configure_file(textures/viking_room.png Debug/viking_room.png COPYONLY)
 configure_file(models/viking_room.obj Debug/viking_room.obj COPYONLY)
