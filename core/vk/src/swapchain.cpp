@@ -4,6 +4,7 @@
 #include "swapchain_support_details.hpp"
 #include "queue_family_indicies.hpp"
 #include "image.hpp"
+#include <limits>
 swapchain::swapchain(GLFWwindow *window, VkPhysicalDevice physical_device, VkDevice device, VkSurfaceKHR surface, VkSampleCountFlagBits msaaSamples)
 {
     images = new SwapchainImages();
