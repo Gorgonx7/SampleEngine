@@ -120,3 +120,8 @@ void DescriptorSet::createDescriptorSets(VkDevice device, UniformBuffer *buffer,
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 }
+
+VkDescriptorPool *DescriptorSet::get_descriptor_pool()
+{
+    return &descriptorPool;
+}
