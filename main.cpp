@@ -21,7 +21,7 @@
 #include <state.hpp>
 #include <vertex.hpp>
 #include <fstream>
-
+#include <interface.hpp>
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -50,6 +50,7 @@ public:
     {
         initWindow();
         initVulkan();
+        interface::config::GenerateInstance(window, state);
         mainLoop();
         cleanup();
     }
@@ -404,6 +405,7 @@ private:
 
     void drawFrame(vk_state *state)
     {
+        interface::draw::Draw(window);
         VkDevice device = state->vk_logical_device->get_device();
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 

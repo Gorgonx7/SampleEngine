@@ -10,6 +10,7 @@ public:
 
     VkDescriptorSetLayout *get_descriptor_set_layout();
     VkDescriptorSet *get_descriptor_set(const int index);
+    VkDescriptorPool *get_descriptor_pool();
     ~DescriptorSet();
 
 private:

@@ -7,3 +7,6 @@
 [submodule "core/libs/glm"]
 	path = core/libs/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "core/libs/imgui"]
+	path = core/libs/imgui
+	url = git@github.com:ocornut/imgui.git
