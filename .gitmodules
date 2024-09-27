@@ -4,9 +4,9 @@
 [submodule "Catch2"]
 	path = Catch2
 	url = git@github.com:catchorg/Catch2.git
-[submodule "core/libs/glm"]
+[submodule "glm"]
 	path = core/libs/glm
 	url = git@github.com:g-truc/glm.git
-[submodule "core/libs/imgui"]
+[submodule "imgui"]
 	path = core/libs/imgui
 	url = git@github.com:ocornut/imgui.git
