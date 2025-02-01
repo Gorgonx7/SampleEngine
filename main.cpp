@@ -50,7 +50,7 @@ public:
     {
         initWindow();
         initVulkan();
-        interface::config::GenerateInstance(window, state);
+        interface = new interface::Interface(window, state, descriptor_set, MAX_FRAMES_IN_FLIGHT);
         mainLoop();
         cleanup();
     }
@@ -61,7 +61,7 @@ private:
     uint32_t mipLevels;
     Image *textureImage;
     VkSampler textureSampler;
-
+    interface::Interface *interface;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     VkBuffer vertexBuffer;
@@ -323,7 +323,7 @@ private:
     {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to begin recording command buffer!");
@@ -370,7 +370,7 @@ private:
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptor_set->get_descriptor_set(currentFrame), 0, nullptr);
 
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-
+        interface->Draw(commandBuffer, state->vk_graphics_pipeline->get_pipeline());
         vkCmdEndRenderPass(commandBuffer);
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
@@ -405,7 +405,7 @@ private:
 
     void drawFrame(vk_state *state)
     {
-        interface::draw::Draw(window);
+        // interface::draw::Draw(window);
         VkDevice device = state->vk_logical_device->get_device();
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -423,11 +423,9 @@ private:
         }
 
         uniform_buffer->updateUniformBuffer(state->vk_swapchain, currentFrame);
+        recordCommandBuffer(state->vk_graphics_pipeline->get_pipeline(), state->vk_graphics_pipeline->get_pipeline_layout(), state->vk_swapchain, commandBuffers[currentFrame], imageIndex, state->vk_render_pass->get_render_pass(), descriptor_set);
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
-
-        vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
-        recordCommandBuffer(state->vk_graphics_pipeline->get_pipeline(), state->vk_graphics_pipeline->get_pipeline_layout(), state->vk_swapchain, commandBuffers[currentFrame], imageIndex, state->vk_render_pass->get_render_pass(), descriptor_set);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

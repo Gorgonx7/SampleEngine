@@ -64,7 +64,8 @@
         "span": "cpp",
         "stack": "cpp",
         "execution": "cpp",
-        "memory_resource": "cpp"
+        "memory_resource": "cpp",
+        "xutility": "cpp"
     },
     "cSpell.words": [
         "Blit",
