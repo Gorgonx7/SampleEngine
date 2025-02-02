@@ -50,7 +50,7 @@ public:
     {
         initWindow();
         initVulkan();
-        interface = new interface::Interface(window, state, descriptor_set, MAX_FRAMES_IN_FLIGHT);
+        interface = new interface::Interface(window, state, MAX_FRAMES_IN_FLIGHT);
         mainLoop();
         cleanup();
     }

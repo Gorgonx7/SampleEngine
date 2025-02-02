@@ -12,7 +12,7 @@ namespace interface
     {
         /// @brief VkDescriptorPool, VkRenderPass, VkCommandBuffer, and VkFramebuffer
     public:
-        Interface(GLFWwindow *window, vk_state *state, DescriptorSet *descriptor_set, int MAX_FRAMES_IN_FLIGHT);
+        Interface(GLFWwindow *window, vk_state *state, int MAX_FRAMES_IN_FLIGHT);
         ~Interface();
         void Draw(VkCommandBuffer command_buffer, VkPipeline pipeline);
     };

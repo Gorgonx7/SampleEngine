@@ -1,4 +1,6 @@
-
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(MACOSX TRUE)
+endif()
 
 target_sources(${PROJECT_NAME}
     PRIVATE
