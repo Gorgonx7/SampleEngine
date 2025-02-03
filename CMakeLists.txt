@@ -9,7 +9,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 add_subdirectory(core)
 find_package(Vulkan REQUIRED)
-message(STATUS "Vulkan_shaderc_combined_FOUND: ${Vulkan_shaderc_combined_FOUND}")
 add_executable(${PROJECT_NAME} "main.cpp")
 
 

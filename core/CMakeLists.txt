@@ -8,7 +8,7 @@ else()
     message(STATUS "This project is a top-level one")
 endif()
 
-find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
+find_package(Vulkan REQUIRED)
 
 
 add_library(${PROJECT_NAME} STATIC)
@@ -22,7 +22,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS} "libs/
 target_link_libraries(${PROJECT_NAME} PUBLIC
 Vulkan::Vulkan
 glfw
-Vulkan::shaderc_combined
+shaderc_combined
 glm::glm
 )
 

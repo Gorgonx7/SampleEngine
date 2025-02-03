@@ -50,7 +50,7 @@ public:
     {
         initWindow();
         initVulkan();
-        interface = new interface::Interface(window, state, MAX_FRAMES_IN_FLIGHT);
+        //       interface = new interface::Interface(window, state, MAX_FRAMES_IN_FLIGHT);
         mainLoop();
         cleanup();
     }
@@ -61,7 +61,7 @@ private:
     uint32_t mipLevels;
     Image *textureImage;
     VkSampler textureSampler;
-    interface::Interface *interface;
+    // interface::Interface *interface;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     VkBuffer vertexBuffer;
@@ -80,6 +80,7 @@ private:
 
     vk_state *state;
     UniformBuffer *uniform_buffer;
+    DescriptorPool *descriptor_pool;
     DescriptorSet *descriptor_set;
     void initWindow()
     {
@@ -104,7 +105,8 @@ private:
         createTextureImage(state, state->vk_physical_device->get_device(), state->vk_logical_device->get_device());
         createTextureSampler(state->vk_physical_device->get_device(), state->vk_logical_device->get_device(), mipLevels);
         uniform_buffer = new UniformBuffer(state->vk_logical_device->get_device(), state->vk_physical_device->get_device(), MAX_FRAMES_IN_FLIGHT);
-        descriptor_set = new DescriptorSet(state->vk_logical_device->get_device(), uniform_buffer, textureImage, textureSampler);
+        descriptor_pool = new DescriptorPool(state->vk_logical_device->get_device());
+        descriptor_set = new DescriptorSet(state->vk_logical_device->get_device(), uniform_buffer, descriptor_pool, textureImage, textureSampler);
         state->create_graphics_pipeline(descriptor_set);
 
         loadModel();
@@ -130,6 +132,7 @@ private:
 
         vkDestroySampler(state->vk_logical_device->get_device(), textureSampler, nullptr);
         delete textureImage;
+        delete descriptor_pool;
         delete descriptor_set;
         delete uniform_buffer;
         vkDestroyBuffer(state->vk_logical_device->get_device(), indexBuffer, nullptr);
@@ -370,7 +373,7 @@ private:
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptor_set->get_descriptor_set(currentFrame), 0, nullptr);
 
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-        interface->Draw(commandBuffer, state->vk_graphics_pipeline->get_pipeline());
+        //        interface->Draw(commandBuffer, state->vk_graphics_pipeline->get_pipeline());
         vkCmdEndRenderPass(commandBuffer);
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
