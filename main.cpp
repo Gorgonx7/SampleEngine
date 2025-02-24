@@ -64,8 +64,8 @@ private:
     // interface::Interface *interface;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
-    Buffer vertexBuffer;
-    Buffer indexBuffer;
+    Buffer *vertexBuffer;
+    Buffer *indexBuffer;
 
     std::vector<VkCommandBuffer> commandBuffers;
 
@@ -127,7 +127,8 @@ private:
 
     void cleanup()
     {
-
+        delete indexBuffer;
+        delete vertexBuffer;
         vkDestroySampler(state->vk_logical_device->get_device(), textureSampler, nullptr);
         delete textureImage;
         delete descriptor_pool;
@@ -164,8 +165,8 @@ private:
             throw std::runtime_error("failed to load texture image!");
         }
 
-        Buffer buffer(device, physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        buffer.copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, pixels, imageSize);
+        Buffer *buffer = new Buffer(device, physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        buffer->copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, pixels, imageSize);
 
         stbi_image_free(pixels);
         textureImage = new Image(device, physicalDevice, texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -174,6 +175,7 @@ private:
         // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
         textureImage->generateMipmaps(VkState->commandPool, VkState->graphicsQueue, device, physicalDevice, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
+        delete buffer;
     }
 
     void createTextureSampler(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t mipLevels)
@@ -252,22 +254,23 @@ private:
     {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-        Buffer buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        buffer.copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, vertices.data(), bufferSize);
-        vertexBuffer = Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        Buffer *buffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        buffer->copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, vertices.data(), bufferSize);
+        vertexBuffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-        copyBuffer(VkState->commandPool, VkState->graphicsQueue, device, buffer.get_buffer(), vertexBuffer.get_buffer(), bufferSize);
+        copyBuffer(VkState->commandPool, VkState->graphicsQueue, device, buffer->get_buffer(), vertexBuffer->get_buffer(), bufferSize);
+        delete buffer;
     }
 
     void createIndexBuffer(vk_state *VkState, VkDevice device, VkPhysicalDevice physicalDevice)
     {
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-        Buffer buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        Buffer *buffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-        buffer.copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, indices.data(), bufferSize);
-        indexBuffer = Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        buffer->copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, indices.data(), bufferSize);
+        indexBuffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-        copyBuffer(VkState->commandPool, VkState->graphicsQueue, device, buffer.get_buffer(), indexBuffer.get_buffer(), bufferSize);
+        copyBuffer(VkState->commandPool, VkState->graphicsQueue, device, buffer->get_buffer(), indexBuffer->get_buffer(), bufferSize);
     }
 
     void createCommandBuffers(VkDevice device)
@@ -328,11 +331,11 @@ private:
         scissor.extent = vk_swapchain->get_extent();
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        VkBuffer vertexBuffers[] = {vertexBuffer.get_buffer()};
+        VkBuffer vertexBuffers[] = {vertexBuffer->get_buffer()};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-        vkCmdBindIndexBuffer(commandBuffer, indexBuffer.get_buffer(), 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer->get_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptor_set->get_descriptor_set(currentFrame), 0, nullptr);
 

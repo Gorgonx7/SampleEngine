@@ -13,7 +13,7 @@ public:
     VkBuffer get_buffer();
     VkDeviceMemory get_buffer_memory();
     void copy_to_buffer(CommandPool *commandPool, VkQueue graphicsQueue, void *data, VkDeviceSize size);
-    void map_memory(void *mapped_memory);
+    void map_memory(void *&mapped_memory);
 
 private:
     VkBuffer buffer;

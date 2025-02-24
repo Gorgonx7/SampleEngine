@@ -91,7 +91,7 @@ void Buffer::copy_to_buffer(CommandPool *commandPool, VkQueue graphicsQueue, voi
     vkUnmapMemory(device, bufferMemory);
 }
 
-void Buffer::map_memory(void *mapped_memory)
+void Buffer::map_memory(void *&mapped_memory)
 {
     vkMapMemory(device, bufferMemory, 0, VK_WHOLE_SIZE, 0, &mapped_memory);
 }

@@ -13,7 +13,7 @@ public:
     VkImage *get_image();
     VkImageView get_view();
     void transitionImageLayout(CommandPool *pool, VkQueue queue, VkDevice device, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
-    void copyBufferToImage(CommandPool *pool, VkQueue queue, VkDevice device, Buffer buffer, uint32_t width, uint32_t height);
+    void copyBufferToImage(CommandPool *pool, VkQueue queue, VkDevice device, Buffer *buffer, uint32_t width, uint32_t height);
     void generateMipmaps(CommandPool *pool, VkQueue queue, VkDevice device, VkPhysicalDevice physicalDevice, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 
 private:

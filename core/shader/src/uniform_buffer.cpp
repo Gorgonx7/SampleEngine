@@ -12,11 +12,15 @@ UniformBuffer::UniformBuffer(VkDevice device, VkPhysicalDevice physicalDevice, c
 
 UniformBuffer::~UniformBuffer()
 {
+    for (auto buffer : uniformBuffers)
+    {
+        delete buffer;
+    }
 }
 
 VkBuffer UniformBuffer::get_buffer(const int buffer_number)
 {
-    return uniformBuffers[buffer_number].get_buffer();
+    return uniformBuffers[buffer_number]->get_buffer();
 }
 
 void UniformBuffer::updateUniformBuffer(swapchain *vk_swapchain, uint32_t currentImage)
@@ -44,7 +48,9 @@ void UniformBuffer::createUniformBuffers(VkDevice device, VkPhysicalDevice physi
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        uniformBuffers[i] = Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        uniformBuffers[i].map_memory(uniformBuffersMapped[i]);
+        uniformBuffers[i] = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        void *data = nullptr;
+        uniformBuffers[i]->map_memory(data);
+        uniformBuffersMapped[i] = data;
     }
 }
