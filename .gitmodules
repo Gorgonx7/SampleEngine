@@ -4,6 +4,24 @@
 [submodule "Catch2"]
 	path = Catch2
 	url = git@github.com:catchorg/Catch2.git
-[submodule "core/libs/glm"]
+[submodule "glm"]
 	path = core/libs/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "imgui"]
+	path = core/libs/imgui
+	url = git@github.com:ocornut/imgui.git
+[submodule "core/libs/imgui"]
+	path = core/libs/imgui
+	url = git@github.com:ocornut/imgui.git
+[submodule "core/libs/shaderc"]
+	path = core/libs/shaderc
+	url = git@github.com:google/shaderc.git
+[submodule "core/libs/glslang"]
+	path = core/libs/glslang
+	url = https://github.com/KhronosGroup/glslang
+[submodule "core/libs/SPIRV-Headers"]
+	path = core/libs/SPIRV-Headers
+	url = git@github.com:KhronosGroup/SPIRV-Headers.git
+[submodule "core/libs/SPIRV-Tools"]
+	path = core/libs/SPIRV-Tools
+	url = git@github.com:KhronosGroup/SPIRV-Tools.git

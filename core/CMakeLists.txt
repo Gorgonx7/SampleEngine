@@ -8,7 +8,7 @@ else()
     message(STATUS "This project is a top-level one")
 endif()
 
-find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
+find_package(Vulkan REQUIRED)
 
 
 add_library(${PROJECT_NAME} STATIC)
@@ -16,11 +16,13 @@ add_subdirectory(system)
 add_subdirectory(vk)
 add_subdirectory(shader)
 add_subdirectory(libs)
-target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS} PUBLIC ./vk/include ./vk/models ./system ./shader/include ./config)
+add_subdirectory(interface)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS} "libs/imgui" "libs/imgui/backends" PUBLIC ./vk/include ./vk/models ./system ./shader/include ./config ./interface/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC
 Vulkan::Vulkan
 glfw
-Vulkan::shaderc_combined
+shaderc_combined
 glm::glm
 )
 

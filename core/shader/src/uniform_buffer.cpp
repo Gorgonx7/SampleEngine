@@ -12,16 +12,15 @@ UniformBuffer::UniformBuffer(VkDevice device, VkPhysicalDevice physicalDevice, c
 
 UniformBuffer::~UniformBuffer()
 {
-    for (size_t i = 0; i < uniformBuffers.size(); i++)
+    for (auto buffer : uniformBuffers)
     {
-        vkDestroyBuffer(vk_device, uniformBuffers[i], nullptr);
-        vkFreeMemory(vk_device, uniformBuffersMemory[i], nullptr);
+        delete buffer;
     }
 }
 
 VkBuffer UniformBuffer::get_buffer(const int buffer_number)
 {
-    return uniformBuffers[buffer_number];
+    return uniformBuffers[buffer_number]->get_buffer();
 }
 
 void UniformBuffer::updateUniformBuffer(swapchain *vk_swapchain, uint32_t currentImage)
@@ -45,13 +44,13 @@ void UniformBuffer::createUniformBuffers(VkDevice device, VkPhysicalDevice physi
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        createBuffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
-
-        vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
+        uniformBuffers[i] = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        void *data = nullptr;
+        uniformBuffers[i]->map_memory(data);
+        uniformBuffersMapped[i] = data;
     }
 }

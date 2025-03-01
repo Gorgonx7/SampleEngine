@@ -19,8 +19,7 @@ public:
     void updateUniformBuffer(swapchain *vk_swapchain, uint32_t currentImage);
 
 private:
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
+    std::vector<Buffer *> uniformBuffers;
     std::vector<void *> uniformBuffersMapped;
     VkDevice vk_device;
     void createUniformBuffers(VkDevice device, VkPhysicalDevice physicalDevice, const int MAX_FRAMES_IN_FLIGHT);

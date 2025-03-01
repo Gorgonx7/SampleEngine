@@ -93,7 +93,7 @@ void Image::transitionImageLayout(CommandPool *pool, VkQueue queue, VkDevice dev
     pool->endSingleTimeCommands(queue, device, commandBuffer);
 }
 
-void Image::copyBufferToImage(CommandPool *pool, VkQueue queue, VkDevice device, VkBuffer buffer, uint32_t width, uint32_t height)
+void Image::copyBufferToImage(CommandPool *pool, VkQueue queue, VkDevice device, Buffer *buffer, uint32_t width, uint32_t height)
 {
     VkCommandBuffer commandBuffer = pool->beginSingleTimeCommands(device);
 
@@ -111,7 +111,7 @@ void Image::copyBufferToImage(CommandPool *pool, VkQueue queue, VkDevice device,
         height,
         1};
 
-    vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    vkCmdCopyBufferToImage(commandBuffer, buffer->get_buffer(), image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
     pool->endSingleTimeCommands(queue, device, commandBuffer);
 }

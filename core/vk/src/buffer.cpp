@@ -28,7 +28,7 @@ uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, Vk
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
+void Buffer::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -55,4 +55,43 @@ void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize
     }
 
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
+}
+Buffer::Buffer()
+{
+}
+Buffer::Buffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+{
+    this->device = device;
+    this->physicalDevice = physicalDevice;
+    createBuffer(device, physicalDevice, size, usage, properties, buffer, bufferMemory);
+}
+
+Buffer::~Buffer()
+{
+    vkDestroyBuffer(device, buffer, nullptr);
+    vkFreeMemory(device, bufferMemory, nullptr);
+}
+
+VkBuffer Buffer::get_buffer()
+{
+    return buffer;
+}
+
+VkDeviceMemory Buffer::get_buffer_memory()
+{
+    return bufferMemory;
+}
+
+void Buffer::copy_to_buffer(CommandPool *commandPool, VkQueue graphicsQueue, void *data, VkDeviceSize size)
+{
+
+    void *stagingData;
+    vkMapMemory(device, bufferMemory, 0, size, 0, &stagingData);
+    memcpy(stagingData, data, static_cast<size_t>(size));
+    vkUnmapMemory(device, bufferMemory);
+}
+
+void Buffer::map_memory(void *&mapped_memory)
+{
+    vkMapMemory(device, bufferMemory, 0, VK_WHOLE_SIZE, 0, &mapped_memory);
 }
