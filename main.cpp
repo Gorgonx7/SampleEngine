@@ -382,9 +382,8 @@ private:
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(device, state->vk_swapchain->get_swapchain(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            framebufferResized = false;
             state->vk_swapchain->recreateSwapChain(window, state->vk_physical_device->get_device(), state->vk_surface->get_surface(), state->vk_physical_device->get_msaa_samples(), state->vk_render_pass->get_render_pass());
             return;
         }
@@ -392,11 +391,11 @@ private:
         {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
+        vkResetFences(device, 1, &inFlightFences[currentFrame]);
+        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 
         uniform_buffer->updateUniformBuffer(state->vk_swapchain, currentFrame);
         recordCommandBuffer(state->vk_graphics_pipeline->get_pipeline(), state->vk_graphics_pipeline->get_pipeline_layout(), state->vk_swapchain, commandBuffers[currentFrame], imageIndex, state->vk_render_pass->get_render_pass(), descriptor_set);
-
-        vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

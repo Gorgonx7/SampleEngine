@@ -76,7 +76,7 @@ void swapchain::recreateSwapChain(GLFWwindow *window, VkPhysicalDevice physical_
     vkDeviceWaitIdle(vk_device);
 
     cleanupSwapChain();
-
+    images = new SwapchainImages();
     createSwapChain(window, physical_device, surface);
     createColorResources(physical_device, msaaSamples);
     createDepthResources(physical_device, msaaSamples);
