@@ -15,10 +15,10 @@ add_library(${PROJECT_NAME} STATIC)
 add_subdirectory(system)
 add_subdirectory(vk)
 add_subdirectory(shader)
-add_subdirectory(libs)
 add_subdirectory(interface)
+add_subdirectory(libs)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS} "libs/imgui" "libs/imgui/backends" PUBLIC ./vk/include ./vk/models ./system ./shader/include ./config ./interface/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS} "./libs/imgui" "libs/imgui/backends" PUBLIC ./vk/include ./vk/models ./system ./shader/include ./config ./interface/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC
 Vulkan::Vulkan
 glfw
