@@ -25,8 +25,9 @@ struct vk_state
     GraphicsPipeline *vk_graphics_pipeline;
     ~vk_state()
     {
-        delete vk_graphics_pipeline;
         delete vk_swapchain;
+        delete vk_graphics_pipeline;
+
         delete vk_render_pass;
         delete commandPool;
         delete vk_physical_device;

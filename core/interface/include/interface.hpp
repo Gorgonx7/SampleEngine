@@ -15,8 +15,12 @@ namespace interface
     public:
         Interface(GLFWwindow *window, vk_state *state, int MAX_FRAMES_IN_FLIGHT);
         ~Interface();
-        void Render();
+        void Render(GLFWwindow *window);
         void Draw(VkCommandBuffer commandBuffer);
+
+    private:
+        VkDescriptorPool imgui_descriptor_pool;
+        vk_state *state;
     };
 
 }

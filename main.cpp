@@ -127,6 +127,7 @@ private:
 
     void cleanup()
     {
+
         delete indexBuffer;
         delete vertexBuffer;
         vkDestroySampler(state->vk_logical_device->get_device(), textureSampler, nullptr);
@@ -134,7 +135,7 @@ private:
         delete descriptor_pool;
         delete descriptor_set;
         delete uniform_buffer;
-
+        delete interface;
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             vkDestroySemaphore(state->vk_logical_device->get_device(), renderFinishedSemaphores[i], nullptr);
@@ -142,6 +143,7 @@ private:
             vkDestroyFence(state->vk_logical_device->get_device(), inFlightFences[i], nullptr);
         }
         delete state;
+
         glfwDestroyWindow(window);
 
         glfwTerminate();
@@ -393,7 +395,7 @@ private:
         }
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
         vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-        interface->Render();
+        interface->Render(window);
         uniform_buffer->updateUniformBuffer(state->vk_swapchain, currentFrame);
         recordCommandBuffer(state->vk_graphics_pipeline->get_pipeline(), state->vk_graphics_pipeline->get_pipeline_layout(), state->vk_swapchain, commandBuffers[currentFrame], imageIndex, state->vk_render_pass->get_render_pass(), descriptor_set);
 

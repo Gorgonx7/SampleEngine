@@ -68,8 +68,9 @@ Buffer::Buffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize si
 
 Buffer::~Buffer()
 {
-    vkDestroyBuffer(device, buffer, nullptr);
     vkFreeMemory(device, bufferMemory, nullptr);
+
+    vkDestroyBuffer(device, buffer, nullptr);
 }
 
 VkBuffer Buffer::get_buffer()

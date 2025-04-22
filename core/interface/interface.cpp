@@ -19,6 +19,7 @@ static void check_vk_result(VkResult err)
 }
 Interface::Interface(GLFWwindow *window, vk_state *state, int MAX_FRAMES_IN_FLIGHT)
 {
+    Interface::state = state;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -50,7 +51,7 @@ Interface::Interface(GLFWwindow *window, vk_state *state, int MAX_FRAMES_IN_FLIG
         pool_info.maxSets += pool_size.descriptorCount;
     pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
     pool_info.pPoolSizes = pool_sizes;
-    VkDescriptorPool imgui_descriptor_pool;
+
     VkResult err = vkCreateDescriptorPool(state->vk_logical_device->get_device(), &pool_info, nullptr, &imgui_descriptor_pool);
     check_vk_result(err);
 
@@ -99,13 +100,22 @@ Interface::~Interface()
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    vkDestroyDescriptorPool(state->vk_logical_device->get_device(), imgui_descriptor_pool, nullptr);
 };
-void Interface::Render()
+void Interface::Render(GLFWwindow *window)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     bool show_demo_window = true;
+    ImGui::BeginMainMenuBar();
+    if (ImGui::BeginMenu("File"))
+    {
+        if (ImGui::MenuItem("Exit"))
+            glfwSetWindowShouldClose(window, true);
+        ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
     ImGui::ShowDemoWindow(&show_demo_window);
     ImGui::Begin("Hello, world!");            // Create a window called "Hello, world!" and append into it.
     ImGui::Text("This is some useful text."); // Display some text (you can use a format string too)
