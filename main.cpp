@@ -273,6 +273,7 @@ private:
         indexBuffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         copyBuffer(VkState->commandPool, VkState->graphicsQueue, device, buffer->get_buffer(), indexBuffer->get_buffer(), bufferSize);
+        delete buffer;
     }
 
     void createCommandBuffers(VkDevice device)
