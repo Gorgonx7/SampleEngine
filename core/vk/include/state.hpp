@@ -38,7 +38,7 @@ struct vk_state
 
 public:
     vk_state();
-    void create_graphics_pipeline(DescriptorSet *descriptor_set);
+    void create_graphics_pipeline(VkDescriptorSetLayout descriptor_set);
 };
 
 vk_state *create_state(GLFWwindow *window);

@@ -4,7 +4,7 @@
 #include "shader_module.hpp"
 #include "vertex.hpp"
 
-GraphicsPipeline::GraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass, DescriptorSet *descriptor_set)
+GraphicsPipeline::GraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass, VkDescriptorSetLayout descriptor_set)
 {
     vk_device = device;
     createGraphicsPipeline(device, msaaSamples, renderPass, descriptor_set);
@@ -24,7 +24,7 @@ VkPipelineLayout GraphicsPipeline::get_pipeline_layout()
     return pipelineLayout;
 }
 
-void GraphicsPipeline::createGraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass, DescriptorSet *descriptor_set)
+void GraphicsPipeline::createGraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass, VkDescriptorSetLayout descriptor_set)
 {
     ShaderModule shader = ShaderModule(device, "shader.vert", "shader.frag");
     auto bindingDescription = Vertex::getBindingDescription();
@@ -98,7 +98,7 @@ void GraphicsPipeline::createGraphicsPipeline(VkDevice device, VkSampleCountFlag
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = descriptor_set->get_descriptor_set_layout();
+    pipelineLayoutInfo.pSetLayouts = &descriptor_set; // TODO ensure this is correct
 
     if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
     {

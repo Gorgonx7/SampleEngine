@@ -13,15 +13,14 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <array>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
 #include <unordered_map>
 #include <state.hpp>
 #include <vertex.hpp>
 #include <fstream>
 #include <interface.hpp>
+#include <fs/fs.hpp>
+#include <model.hpp>
+#include <texture.hpp>
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -29,20 +28,7 @@ const std::string MODEL_PATH = "viking_room.obj";
 const std::string TEXTURE_PATH = "viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
-bool exists_test0(const std::string &name)
-{
-    std::ifstream f(name.c_str());
-    if (f.good())
-    {
-        std::cout << "file: " << name << " exists!" << std::endl;
-    }
-    else
-    {
-        std::cout << "file: " << name << " does not exist" << std::endl;
-    }
-    std::cout << strerror(errno) << std::endl;
-    return f.good();
-}
+
 class HelloTriangleApplication
 {
 public:
@@ -58,14 +44,7 @@ public:
 private:
     GLFWwindow *window;
 
-    uint32_t mipLevels;
-    Image *textureImage;
-    VkSampler textureSampler;
     interface::Interface *interface;
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    Buffer *vertexBuffer;
-    Buffer *indexBuffer;
 
     std::vector<VkCommandBuffer> commandBuffers;
 
@@ -79,7 +58,8 @@ private:
     vk_state *state;
     UniformBuffer *uniform_buffer;
     DescriptorPool *descriptor_pool;
-    DescriptorSet *descriptor_set;
+    Model *model;
+    Texture *texture;
     void initWindow()
     {
         glfwInit();
@@ -100,16 +80,12 @@ private:
     void initVulkan()
     {
         state = create_state(window);
-        createTextureImage(state, state->vk_physical_device->get_device(), state->vk_logical_device->get_device());
-        createTextureSampler(state->vk_physical_device->get_device(), state->vk_logical_device->get_device(), mipLevels);
+
         uniform_buffer = new UniformBuffer(state->vk_logical_device->get_device(), state->vk_physical_device->get_device(), MAX_FRAMES_IN_FLIGHT);
         descriptor_pool = new DescriptorPool(state->vk_logical_device->get_device());
-        descriptor_set = new DescriptorSet(state->vk_logical_device->get_device(), uniform_buffer, descriptor_pool, textureImage, textureSampler);
-        state->create_graphics_pipeline(descriptor_set);
-
-        loadModel();
-        createVertexBuffer(state, state->vk_logical_device->get_device(), state->vk_physical_device->get_device());
-        createIndexBuffer(state, state->vk_logical_device->get_device(), state->vk_physical_device->get_device());
+        texture = new Texture(state, TEXTURE_PATH);
+        model = new Model(MODEL_PATH, state, uniform_buffer, descriptor_pool, texture);
+        state->create_graphics_pipeline(model->get_descriptor_set_layout());
         createCommandBuffers(state->vk_logical_device->get_device());
         createSyncObjects(state->vk_logical_device->get_device());
     }
@@ -128,12 +104,8 @@ private:
     void cleanup()
     {
 
-        delete indexBuffer;
-        delete vertexBuffer;
-        vkDestroySampler(state->vk_logical_device->get_device(), textureSampler, nullptr);
-        delete textureImage;
         delete descriptor_pool;
-        delete descriptor_set;
+        delete model;
         delete uniform_buffer;
         delete interface;
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -154,128 +126,6 @@ private:
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
-    void createTextureImage(vk_state *VkState, VkPhysicalDevice physicalDevice, VkDevice device)
-    {
-        exists_test0(TEXTURE_PATH.c_str());
-        int texWidth, texHeight, texChannels;
-        stbi_uc *pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
-        mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-
-        if (!pixels)
-        {
-            throw std::runtime_error("failed to load texture image!");
-        }
-
-        Buffer *buffer = new Buffer(device, physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        buffer->copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, pixels, imageSize);
-
-        stbi_image_free(pixels);
-        textureImage = new Image(device, physicalDevice, texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
-        textureImage->transitionImageLayout(VkState->commandPool, VkState->graphicsQueue, device, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
-        textureImage->copyBufferToImage(VkState->commandPool, VkState->graphicsQueue, device, buffer, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-        // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-
-        textureImage->generateMipmaps(VkState->commandPool, VkState->graphicsQueue, device, physicalDevice, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
-        delete buffer;
-    }
-
-    void createTextureSampler(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t mipLevels)
-    {
-        VkPhysicalDeviceProperties properties{};
-        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-
-        VkSamplerCreateInfo samplerInfo{};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = static_cast<float>(mipLevels);
-        samplerInfo.mipLodBias = 0.0f;
-
-        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create texture sampler!");
-        }
-    }
-
-    void loadModel()
-    {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
-        exists_test0(MODEL_PATH.c_str());
-
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str()))
-        {
-            throw std::runtime_error(warn + err);
-        }
-
-        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-
-        for (const auto &shape : shapes)
-        {
-            for (const auto &index : shape.mesh.indices)
-            {
-                Vertex vertex{};
-
-                vertex.pos = {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]};
-
-                vertex.texCoord = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
-
-                vertex.color = {1.0f, 1.0f, 1.0f};
-
-                if (uniqueVertices.count(vertex) == 0)
-                {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
-                }
-
-                indices.push_back(uniqueVertices[vertex]);
-            }
-        }
-    }
-
-    void createVertexBuffer(vk_state *VkState, VkDevice device, VkPhysicalDevice physicalDevice)
-    {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-        Buffer *buffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        buffer->copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, vertices.data(), bufferSize);
-        vertexBuffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        copyBuffer(VkState->commandPool, VkState->graphicsQueue, device, buffer->get_buffer(), vertexBuffer->get_buffer(), bufferSize);
-        delete buffer;
-    }
-
-    void createIndexBuffer(vk_state *VkState, VkDevice device, VkPhysicalDevice physicalDevice)
-    {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-        Buffer *buffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        buffer->copy_to_buffer(VkState->commandPool, VkState->graphicsQueue, indices.data(), bufferSize);
-        indexBuffer = new Buffer(device, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        copyBuffer(VkState->commandPool, VkState->graphicsQueue, device, buffer->get_buffer(), indexBuffer->get_buffer(), bufferSize);
-        delete buffer;
-    }
-
     void createCommandBuffers(VkDevice device)
     {
         commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -292,7 +142,7 @@ private:
         }
     }
 
-    void recordCommandBuffer(VkPipeline graphicsPipeline, VkPipelineLayout pipelineLayout, swapchain *vk_swapchain, VkCommandBuffer commandBuffer, uint32_t imageIndex, VkRenderPass renderPass, DescriptorSet *descriptor_set)
+    void recordCommandBuffer(VkPipeline graphicsPipeline, VkPipelineLayout pipelineLayout, swapchain *vk_swapchain, VkCommandBuffer commandBuffer, uint32_t imageIndex, VkRenderPass renderPass)
     {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -333,16 +183,7 @@ private:
         scissor.offset = {0, 0};
         scissor.extent = vk_swapchain->get_extent();
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        VkBuffer vertexBuffers[] = {vertexBuffer->get_buffer()};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-        vkCmdBindIndexBuffer(commandBuffer, indexBuffer->get_buffer(), 0, VK_INDEX_TYPE_UINT32);
-
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptor_set->get_descriptor_set(currentFrame), 0, nullptr);
-
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        model->Draw(commandBuffer, pipelineLayout, currentFrame);
         interface->Draw(commandBuffer);
         vkCmdEndRenderPass(commandBuffer);
 
@@ -398,7 +239,7 @@ private:
         vkResetCommandBuffer(commandBuffers[currentFrame], 0);
         interface->Render(window);
         uniform_buffer->updateUniformBuffer(state->vk_swapchain, currentFrame);
-        recordCommandBuffer(state->vk_graphics_pipeline->get_pipeline(), state->vk_graphics_pipeline->get_pipeline_layout(), state->vk_swapchain, commandBuffers[currentFrame], imageIndex, state->vk_render_pass->get_render_pass(), descriptor_set);
+        recordCommandBuffer(state->vk_graphics_pipeline->get_pipeline(), state->vk_graphics_pipeline->get_pipeline_layout(), state->vk_swapchain, commandBuffers[currentFrame], imageIndex, state->vk_render_pass->get_render_pass());
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

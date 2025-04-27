@@ -1,5 +1,6 @@
 #include "descriptor_sets.hpp"
-
+#include <vulkan/vulkan.hpp>
+#include <image.hpp>
 DescriptorSet::DescriptorSet(VkDevice device, UniformBuffer *buffer, DescriptorPool *pool, Image *textureImage, VkSampler sampler)
 {
     vk_device = device;
@@ -8,9 +9,9 @@ DescriptorSet::DescriptorSet(VkDevice device, UniformBuffer *buffer, DescriptorP
     createDescriptorSets(device, buffer, textureImage, sampler);
 }
 
-VkDescriptorSetLayout *DescriptorSet::get_descriptor_set_layout()
+VkDescriptorSetLayout DescriptorSet::get_descriptor_set_layout()
 {
-    return &descriptorSetLayout;
+    return descriptorSetLayout;
 }
 VkDescriptorSet *DescriptorSet::get_descriptor_set(const int index)
 {

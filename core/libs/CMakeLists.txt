@@ -21,3 +21,6 @@ set(SHADERC_GLSLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glslang)
 set(SHADERC_ENABLE_SHARED_CRT ON)
 set(SPIRV-Headers_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SPIRV-Headers)
 add_subdirectory(shaderc)
+
+
+target_include_directories(${PROJECT_NAME} PRIVATE ./tiny-obj-loader ./stb_image)
