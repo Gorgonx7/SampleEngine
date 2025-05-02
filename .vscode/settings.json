@@ -101,7 +101,11 @@
         "xmemory": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "cinttypes": "cpp",
+        "filesystem": "cpp",
+        "unordered_set": "cpp",
+        "*.hpp11": "cpp"
     },
     "cSpell.words": [
         "Blit",

@@ -1,7 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "uniform_buffer.hpp"
-#include "image.hpp"
+#include <image.hpp>
 #include "descriptor_pool.hpp"
 
 class DescriptorSet
@@ -9,7 +9,7 @@ class DescriptorSet
 public:
     DescriptorSet(VkDevice device, UniformBuffer *buffer, DescriptorPool *pool, Image *textureImage, VkSampler sampler);
 
-    VkDescriptorSetLayout *get_descriptor_set_layout();
+    VkDescriptorSetLayout get_descriptor_set_layout();
     VkDescriptorSet *get_descriptor_set(const int index);
     VkDescriptorPool *get_descriptor_pool();
     ~DescriptorSet();

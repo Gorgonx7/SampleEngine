@@ -76,7 +76,7 @@ void swapchain::recreateSwapChain(GLFWwindow *window, VkPhysicalDevice physical_
     vkDeviceWaitIdle(vk_device);
 
     cleanupSwapChain();
-
+    images = new SwapchainImages();
     createSwapChain(window, physical_device, surface);
     createColorResources(physical_device, msaaSamples);
     createDepthResources(physical_device, msaaSamples);
@@ -132,13 +132,15 @@ void swapchain::createSwapChain(GLFWwindow *window, VkPhysicalDevice physicalDev
     {
         throw std::runtime_error("failed to create swap chain!");
     }
-    std::vector<VkImage> swapChainImages;
     vkGetSwapchainImagesKHR(vk_device, vk_swapchain, &imageCount, nullptr);
+    std::vector<VkImage> swapChainImages = std::vector<VkImage>();
     swapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(vk_device, vk_swapchain, &imageCount, swapChainImages.data());
     for (int i = 0; i < imageCount; i++)
     {
-        images->swapChainImages.push_back(new Image(vk_device, swapChainImages[i], surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1));
+        Image *img = new Image(vk_device, swapChainImages[i], surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+
+        images->swapChainImages.push_back(img);
     }
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;

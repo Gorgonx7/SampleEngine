@@ -34,4 +34,18 @@ public:
 
         return buffer;
     }
+    static bool exists_test0(const std::string &name)
+    {
+        std::ifstream f(name.c_str());
+        if (f.good())
+        {
+            std::cout << "file: " << name << " exists!" << std::endl;
+        }
+        else
+        {
+            std::cout << "file: " << name << " does not exist" << std::endl;
+        }
+        std::cout << strerror(errno) << std::endl;
+        return f.good();
+    }
 };

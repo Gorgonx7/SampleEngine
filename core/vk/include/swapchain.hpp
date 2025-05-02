@@ -4,12 +4,15 @@
 #include "image.hpp"
 struct SwapchainImages
 {
-    std::vector<Image *> swapChainImages = {};
+    std::vector<Image *> swapChainImages;
     Image *colourImage = nullptr;
     Image *depthImage = nullptr;
 
 public:
-    SwapchainImages() {}
+    SwapchainImages()
+    {
+        swapChainImages = {};
+    }
     ~SwapchainImages()
     {
         delete colourImage;
