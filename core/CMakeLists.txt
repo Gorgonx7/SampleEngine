@@ -19,6 +19,7 @@ add_subdirectory(interface)
 add_subdirectory(libs)
 add_subdirectory(model)
 add_subdirectory(texture)
+add_subdirectory(engine)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS} "./libs/imgui" "libs/imgui/backends" PUBLIC ./vk/include ./vk/models ./system ./shader/include ./config ./interface/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC
 Vulkan::Vulkan
