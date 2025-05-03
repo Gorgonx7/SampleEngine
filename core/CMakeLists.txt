@@ -9,7 +9,7 @@ else()
 endif()
 
 find_package(Vulkan REQUIRED)
-
+message(${Vulkan_VERSION})
 
 add_library(${PROJECT_NAME} STATIC)
 add_subdirectory(system)
