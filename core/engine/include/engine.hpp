@@ -3,7 +3,6 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 #include <vector>
-#include <model.hpp>
 #include <swapchain.hpp>
 
 class Engine
@@ -21,7 +20,6 @@ public:
     bool framebufferResized = false;
     const int MAX_FRAMES_IN_FLIGHT = 2;
     uint32_t currentFrame = 0;
-    Model *model; // TODO: move to child class
     void Run();
 
 private:
