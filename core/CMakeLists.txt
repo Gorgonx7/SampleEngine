@@ -9,14 +9,15 @@ else()
 endif()
 
 find_package(Vulkan REQUIRED)
-
+message(${Vulkan_VERSION})
 
 add_library(${PROJECT_NAME} STATIC)
+add_subdirectory(libs)
+
 add_subdirectory(system)
 add_subdirectory(vk)
 add_subdirectory(shader)
 add_subdirectory(interface)
-add_subdirectory(libs)
 add_subdirectory(model)
 add_subdirectory(texture)
 add_subdirectory(engine)

@@ -1,6 +1,6 @@
 #pragma once
 #include <state.hpp>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 #include <vector>
 #include <model.hpp>

@@ -1,5 +1,5 @@
 #pragma once
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #include "state.hpp"
 #include "renderpass.hpp"
 #include "command.hpp"
