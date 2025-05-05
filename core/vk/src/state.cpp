@@ -8,9 +8,9 @@
 #include "graphics_pipeline.hpp"
 #include <GLFW/glfw3.h>
 vk_state::vk_state() {}
-void vk_state::create_graphics_pipeline(VkDescriptorSetLayout descriptor_set)
+void vk_state::create_graphics_pipeline()
 {
-    vk_graphics_pipeline = new GraphicsPipeline(vk_logical_device->get_device(), vk_physical_device->get_msaa_samples(), vk_render_pass->get_render_pass(), descriptor_set);
+    vk_graphics_pipeline = new GraphicsPipeline(vk_logical_device->get_device(), vk_physical_device->get_msaa_samples(), vk_render_pass->get_render_pass());
 }
 
 vk_state *create_state(GLFWwindow *window)

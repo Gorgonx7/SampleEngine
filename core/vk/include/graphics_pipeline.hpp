@@ -5,7 +5,7 @@
 class GraphicsPipeline
 {
 public:
-    GraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass, VkDescriptorSetLayout descriptor_set);
+    GraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass);
     ~GraphicsPipeline();
     VkPipeline get_pipeline();
 
@@ -15,5 +15,5 @@ private:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     VkDevice vk_device;
-    void createGraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass, VkDescriptorSetLayout descriptor_set);
+    void createGraphicsPipeline(VkDevice device, VkSampleCountFlagBits msaaSamples, VkRenderPass renderPass);
 };

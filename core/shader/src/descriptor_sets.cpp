@@ -1,6 +1,9 @@
 #include "descriptor_sets.hpp"
 #include <vulkan/vulkan.hpp>
 #include <image.hpp>
+#include <vector>
+std::vector<VkDescriptorSetLayout> DescriptorSet::descriptorSetLayouts = {};
+
 DescriptorSet::DescriptorSet(VkDevice device, UniformBuffer *buffer, DescriptorPool *pool, Image *textureImage, VkSampler sampler)
 {
     vk_device = device;
@@ -49,6 +52,7 @@ void DescriptorSet::createDescriptorSetLayout()
     {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
+    descriptorSetLayouts.push_back(descriptorSetLayout);
 }
 
 void DescriptorSet::createDescriptorSets(VkDevice device, UniformBuffer *buffer, Image *textureImage, VkSampler sampler)

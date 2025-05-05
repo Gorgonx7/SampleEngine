@@ -10,7 +10,7 @@ Engine::Engine()
 void Engine::Run()
 {
     Init();
-    state->create_graphics_pipeline(model->get_descriptor_set_layout());
+    state->create_graphics_pipeline();
     createCommandBuffers(state->vk_logical_device->get_device());
     createSyncObjects(state->vk_logical_device->get_device());
     mainLoop();

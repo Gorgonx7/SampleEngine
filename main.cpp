@@ -26,6 +26,7 @@ private:
     DescriptorPool *descriptor_pool;
 
     Texture *texture;
+    Model *model;
     void Init() override
     {
         uniform_buffer = new UniformBuffer(state->vk_logical_device->get_device(), state->vk_physical_device->get_device(), MAX_FRAMES_IN_FLIGHT);
