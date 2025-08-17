@@ -2,7 +2,7 @@
 	path = core/libs/glfw
 	url = git@github.com:glfw/glfw.git
 [submodule "Catch2"]
-	path = Catch2
+	path = test/Catch2
 	url = git@github.com:catchorg/Catch2.git
 [submodule "glm"]
 	path = core/libs/glm
