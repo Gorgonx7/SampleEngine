@@ -28,20 +28,14 @@ core
 
 
 
-
-# add_executable(tests test/test.cpp)
-# add_library(test_sources OBJECT test/core/shader/shader.cpp)
-# target_link_libraries(test_sources Catch2::Catch2)
-# add_subdirectory(Catch2)
-
-# target_link_libraries(tests PRIVATE Catch2::Catch2WithMain
-# Vulkan::Vulkan
-# glfw
-# glm::glm
-# test_sources
-# Vulkan::shaderc_combined
-# )
-# list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-# include(CTest)
-# include(Catch)
-# catch_discover_tests(tests)
+# Add test executable
+file(GLOB_RECURSE CORE_TEST_SOURCES "${CMAKE_SOURCE_DIR}/test/core/**/*.cpp")
+add_executable(tests test/test.cpp ${CORE_TEST_SOURCES})
+# Add Catch2
+add_subdirectory(Catch2)
+target_link_libraries(tests PRIVATE core Catch2::Catch2WithMain Vulkan::Vulkan)
+target_include_directories(tests PRIVATE ./test/helpers)
+# Enable testing and discover Catch2 tests
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)
