@@ -30,6 +30,7 @@ core
 
 # Add test executable
 file(GLOB_RECURSE CORE_TEST_SOURCES "${CMAKE_SOURCE_DIR}/test/core/**/*.cpp")
+message(${CORE_TEST_SOURCES})
 add_executable(tests test/test.cpp ${CORE_TEST_SOURCES})
 # Add Catch2
 add_subdirectory(Catch2)
